@@ -19,7 +19,8 @@ dx, dy = 0.1, 0.1
 # generate 2 2d grids for the x & y bounds
 y, x = np.mgrid[slice(-8, 8 + dy, dy),
                 slice(-8, 8 + dx, dx)]
-r=3.0/5.0
+plt.close('all')
+r=0.3
 s2=5
 pdf=gausspdf2D(x,y,r,s2)
 plt.figure(1)

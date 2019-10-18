@@ -19,9 +19,9 @@ np.random.seed(0)
 
 # create many random samples
 N=1000
-s=2
-m=1
-n=s*np.random.randn(N)+m
+s = 2
+m = 1
+n=s* np.random.randn( N ) + m
 
 # range of samples to be taken into account when estimating expectations
 R=np.arange(10,1000,10)

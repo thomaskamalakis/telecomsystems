@@ -38,6 +38,7 @@ for n in range(0,Nit):
     if n % plot_every == 0:    
        plt.plot(t,x)
        print(n)
+       
     x=np.asmatrix(x)
     xt=np.transpose(x)
     X=np.multiply(xt,x)
