@@ -18,14 +18,9 @@ f = np.linspace(-Fmax, Fmax, Npf )
 
 # Calculate signal in the time domain
 x = np.zeros( t.size )
-i = 0
 
 # for loop to estimate the signal
-for tm in t:
-    if (tm >= -T1/2) and (tm <= T1/2):
-        x[ i ] = 1
-    
-    i += 1
+x = np.logical_and(t >= -T1/2, t <= T1/2).astype(float)
 
 # signal spectrum
 X = T1 * np.sinc( f * T1 )
