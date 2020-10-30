@@ -1,7 +1,0 @@
-\selectlanguage *{greek}
-\beamer@sectionintoc {1}{Σήματα}{3}{0}{1}
-\beamer@sectionintoc {2}{Ολίγον Python}{8}{0}{2}
-\beamer@sectionintoc {3}{Συστήματα}{14}{0}{3}
-\beamer@sectionintoc {4}{Fast Fourier Transform}{22}{0}{4}
-\beamer@sectionintoc {5}{Python modules}{31}{0}{5}
-\beamer@sectionintoc {6}{Σήματα και Συστήματα}{33}{0}{6}
