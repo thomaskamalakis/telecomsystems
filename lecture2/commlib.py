@@ -6,9 +6,9 @@ def square(t , T):
     return f.astype('float')
 
 # create time axis
-def time_axis(Tmin, Tmax, N):   
+def time_axis( Tmax, N):   
     n = np.arange(-N / 2.0, N / 2.0, 1)
-    Dt = (Tmax - Tmin) / N
+    Dt = 2 * Tmax / N
     return n * Dt
 
 # create frequency axis
@@ -22,7 +22,7 @@ def frequency_axis(t):
 # Calculate spectrum of x using FFT
 def spectrum(t, x):
     Dt = t[1] - t[0]
-    return Dt*np.fft.fftshift(np.fft.fft(np.fft.fftshift(x)))
+    return Dt * np.fft.fftshift(np.fft.fft(np.fft.fftshift(x)))
 
 # Inverse fourier transform 
 def inv_spectrum(f, X):

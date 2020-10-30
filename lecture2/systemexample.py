@@ -5,13 +5,15 @@ import commlib as cl
 T = 4;
 Tmax = 30.0
 N = 1024
-Fmax = 20.0/T
+Fmax = 5.0/T
 
-t = cl.time_axis(-Tmax, +Tmax, N)         # time axis
+t = cl.time_axis(Tmax, N)         # time axis
 x = cl.square(t,T)                        # input signal
+
 Hc = lambda f : cl.square_filter(f, Fmax) # filter callable
 
 y = cl.system_action(t, x, Hc)
+
 
 plt.close('all')
 plt.figure(1)
