@@ -67,7 +67,10 @@ def plot_signal(t, x, xlabel = 't', ylabel = 'x(t)', figure_no = None):
     plt.plot( t, x )
     plt.xlabel( xlabel )
     plt.ylabel( ylabel )  
-    
+
+# power spectral density    
 def power_density(t, x):
     T = np.max(t) - np.min(t)
     return 1.0 / T * np.abs( spectrum(t,x) ) ** 2.0
+
+# uniform samples
