@@ -153,3 +153,38 @@ def plot_constellation(c, figure_no = None, title = None):
     
     if title is not None:
         plt.title(title)
+        
+# gray coding        
+def gray_code(m):
+
+    if m==1:
+        g = ['0','1']
+
+    elif m>1:
+        gs = gray_code(m-1)
+        gsr = gs[::-1]
+        gs0 = ['0' + x for x in gs]
+        gs1 = ['1' + x for x in gsr]
+        g= gs0 + gs1
+    return g 
+
+def pam_gray_map(M, beta = 1):
+    
+    gc = gray_code( np.log2(M) )
+    Am = pam_constellation(M, beta = beta)
+    pam_map = []
+    
+    for i, cw in enumerate(gc):
+        
+        pam_map.append([ i, gc[i], Am[i] ])
+        
+    return pam_map
+
+def plot_map( smap, figure_no = None, disp_x = 0.0, disp_y = 0.0 ):
+    
+    for i, bits, symbol in smap:
+        plt.plot( np.real(symbol), np.imag(symbol), 'o' )
+        plt.text( np.real(symbol) + disp_x, np.imag(symbol) + disp_y, bits, rotation=90)
+        
+        
+            
