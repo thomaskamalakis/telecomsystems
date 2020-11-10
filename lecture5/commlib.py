@@ -185,6 +185,50 @@ def plot_map( smap, figure_no = None, disp_x = 0.0, disp_y = 0.0 ):
     for i, bits, symbol in smap:
         plt.plot( np.real(symbol), np.imag(symbol), 'o' )
         plt.text( np.real(symbol) + disp_x, np.imag(symbol) + disp_y, bits, rotation=90)
+
+# build a dictionary like map for faster encoding        
+def pam_gray_forward_map(M, beta = 1):
+
+    pam_map = pam_gray_map(M, beta = beta)
+    symbols = [x[2] for x in pam_map]
+    bits = [x[1] for x in pam_map]
+    forward_map = {}
+    
+    for i, symbol in enumerate(symbols):
+        key = bits[i]
+        forward_map[ key ] = symbol
         
+    return forward_map
+
+def array_to_str(a):
+    astr = [str(x) for x in a]
+    return ''.join(astr)
+
+# bits to symbols
+def bits_to_symbols(bits, fmap, return_bits = False):
+    
+    M = len( fmap )
+    m = np.log2( M ).astype( int )
+    Nbits = bits.size
+    
+    symbols = []
+    bitgroupsψο = []
+    i = 0
+    j = 0
+    
+    while i < Nbits:
+        key = array_to_str(bits[ i : i+m ])
+        bitgroups.append( key )
+        symbols.append( fmap[ key ] )
+        i += m
+        j += 1
+    if not return_bits:    
+        return np.array(symbols)    
+    else:
+        return np.array(symbols), bitgroups
+
+# random bit series
+def random_bits(Nbits):
+    return np.random.randint(0, high = 2, size = Nbits, dtype = int)
         
             
