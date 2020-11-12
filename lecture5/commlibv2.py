@@ -304,6 +304,15 @@ class digital_signal(signal):
 
         self.samples[j] = symbols[ i[j] ]
         
+    def modulate_from_bits( self, bits, constellation = None):
+        
+        if constellation is not None:
+            self.set_constellation(constellation)
+        
+        self.set_input_bits( bits )
+        samples = self.constellation.bits_to_symbols( bits )
+        self.modulate_from_symbols( samples )
+        
         
         
 

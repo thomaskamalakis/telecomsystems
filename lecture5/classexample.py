@@ -26,8 +26,8 @@ c.plot()
 c.plot_map()
 
 bits = cl.random_bits(32)
-symbols = c.bits_to_symbols( bits )
+#symbols = c.bits_to_symbols( bits )
 z = cl.digital_signal(TS = 1e-6, samples_per_symbol = 10, 
                       tinitial = 0, tguard = 0.0, constellation = c)
-z.modulate_from_symbols( symbols )
+z.modulate_from_bits( bits, constellation = c )
 z.plot()
