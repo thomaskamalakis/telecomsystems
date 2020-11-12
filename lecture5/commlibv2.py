@@ -7,10 +7,14 @@ DEFAULT_PLOT_SETTINGS = {
     'ylabelt' : 'x(t)',
     'xlabelf' : 'f', 
     'ylabelf' : 'X(f)',    
-    'xlim' : None,
-    'ylim' : None, 
-    'show_grid' : False,
-    'title' : None
+    'xlimt' : None,
+    'ylimt' : None,
+    'xlimf' : None,
+    'ylimf' : None,    
+    'show_gridt' : False,
+    'show_gridf' : False,    
+    'titlet' : None,
+    'titlef' : None    
 }
 
 def array_to_str(a):
@@ -36,7 +40,7 @@ def time_axis(Tmin, Tmax, N):
 # Plot signal
 def plot_signal(t, x, plot_type = 'o', close_all = False,
                       xlabel = 't', ylabel = 'x(t)', figure_no = None,
-                      xlim = None, ylim = None, show_grid = False):
+                      xlim = None, ylim = None, show_grid = False, title = None):
     
     if close_all:
         plt.close('all')
@@ -58,6 +62,9 @@ def plot_signal(t, x, plot_type = 'o', close_all = False,
     
     if show_grid:
         plt.grid()
+        
+    if title is not None:
+        plt.title(title)
 
 # random_bits : generation of random bits with equal probability
 def random_bits(Nbits):
@@ -78,8 +85,7 @@ def gray_code(m):
         g= gs0 + gs1
     return g         
 
-def str_to_bitsarray( bits_str ):
-    
+def str_to_bitsarray( bits_str ):    
     bits = np.zeros( len(bits_str) )
     for i, bit in enumerate(bits_str):
         bits[i] = int( bit )
@@ -138,48 +144,24 @@ class signal:
 
     def set_default_plot_properties( self ):
         
-        self.plot_type = DEFAULT_PLOT_SETTINGS['plot_type']
-        self.xlabelt = DEFAULT_PLOT_SETTINGS['xlabelt']
-        self.ylabelt = DEFAULT_PLOT_SETTINGS['ylabelt']
-        self.xlabelf = DEFAULT_PLOT_SETTINGS['xlabelf']
-        self.ylabelf = DEFAULT_PLOT_SETTINGS['ylabelf']        
-        self.xlim = DEFAULT_PLOT_SETTINGS['xlim']
-        self.ylim = DEFAULT_PLOT_SETTINGS['ylim']
-        self.show_grid = DEFAULT_PLOT_SETTINGS['show_grid']
-        self.title = DEFAULT_PLOT_SETTINGS['title']
-        self.plot_type = DEFAULT_PLOT_SETTINGS['plot_type']
-    
+        for key in DEFAULT_PLOT_SETTINGS:
+            setattr( self, key, DEFAULT_PLOT_SETTINGS[key] )
+        
     def plot(self, close_all = False, figure_no = None, what = 'time'):
         
-        if close_all:
-            plt.close('all')
-            
-        if figure_no is None:
-            plt.figure()
-        else:
-            plt.figure(figure_no)
-        
         if what == 'time':
-            plt.plot( self.t, self.samples, self.plot_type )
-            plt.xlabel( self.xlabelt )
-            plt.ylabel( self.ylabelt ) 
+           plot_signal(self.t, self.samples, plot_type = self.plot_type, 
+                       close_all = close_all, xlabel = self.xlabelt, 
+                       ylabel = self.ylabelt, figure_no = figure_no,
+                       xlim = self.xlimt, ylim = self.ylimt, 
+                       show_grid = self.show_gridt, title = self.titlet)
         
-        elif what == 'spectrum':            
-            plt.plot( self.f, self.spec, self.plot_type)
-            plt.xlabel( self.xlabelf )
-            plt.ylabel( self.ylabelf ) 
-                    
-        if self.xlim is not None:
-            plt.xlim(self.xlim)
-        
-        if self.ylim is not None:
-            plt.ylim(self.ylim)
-        
-        if self.show_grid:
-            plt.grid()
-        
-        if self.title is not None:
-            plt.title( self.title )
+        elif what == 'spec':
+           plot_signal(self.f, self.spec, plot_type = self.plot_type, 
+                       close_all = close_all, xlabel = self.xlabelf, 
+                       ylabel = self.ylabelf, figure_no = figure_no,
+                       xlim = self.xlimf, ylim = self.ylimf, 
+                       show_grid = self.show_gridt, title = self.titlef)
     
     def windowed(self, ta, tb):
                 
