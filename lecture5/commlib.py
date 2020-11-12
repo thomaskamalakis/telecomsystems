@@ -82,6 +82,8 @@ def plot_signal(t, x, plot_type = 'o', close_all = False,
     
     if show_grid:
         plt.grid()
+        
+
     
 # power spectral density    
 def power_density(t, x):
@@ -212,7 +214,7 @@ def bits_to_symbols(bits, fmap, return_bits = False):
     Nbits = bits.size
     
     symbols = []
-    bitgroupsψο = []
+    bitgroups = []
     i = 0
     j = 0
     
@@ -227,8 +229,29 @@ def bits_to_symbols(bits, fmap, return_bits = False):
     else:
         return np.array(symbols), bitgroups
 
-# random bit series
+# random_bits : generation of random bits with equal probability
 def random_bits(Nbits):
     return np.random.randint(0, high = 2, size = Nbits, dtype = int)
-        
+
+# plot_pam : plot pam waveform and show associated bits
+def plot_pam(t, x, M, bits, TS, tstart = 0, dy = 0, plot_type = 'o'):
+    
+    plot_signal(t, x, xlabel = 't', ylabel = 'x(t)', 
+                plot_type = plot_type)
+    
+    Nbits = 0
+    i = 0
+    m = np.log2(M).astype(int)
+    tcurrent = tstart
+    
+    while ( i < Nbits ) or ( tcurrent <= np.max(t) ):
+       key = array_to_str(bits[ i : i+m ])
+       xcurrent = np.interp( tcurrent, t, x )
+       plt.text(tcurrent, xcurrent + dy, key)
+       i += m
+       tcurrent += TS
+       
+       
+          
+    
             
