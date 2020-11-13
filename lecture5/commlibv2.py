@@ -189,6 +189,7 @@ class constellation:
     def __init__(self, title = None):
        self.bit_map = {}
        self.bits = []
+       self.bits_str = []
        self.symbols = []
        self.title = title
               
@@ -218,6 +219,9 @@ class constellation:
             plt.text( np.real(symbol) + disp_x, np.imag(symbol) + disp_y, bits_str, 
                       rotation = rotation)
         
+        if self.title is not None:
+            plt.title(self.title)
+            
     def set_symbols( self, symbols ):
         self.symbols = symbols
         
