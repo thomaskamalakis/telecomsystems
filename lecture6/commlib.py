@@ -392,6 +392,7 @@ class system:
     def get_output(self):
         return self.output_signal
 
+#---montecarlo1
 class monte_carlo:
     def __init__(self, max_iterations = 1000, generate = None, 
                        apply = None, measure = None, report_step = 10,
@@ -416,7 +417,9 @@ class monte_carlo:
             
         self.termination_condition = False
         self.iterations_performed = i
-                       
+#---montecarlo2
+
+#---pamsimulation1                       
 class pam_simulation(monte_carlo):
     
     def __init__(self, max_iterations = 1000, M = 16, SNRbdB = 10, report_step = 10, max_symbol_errors = 100):
@@ -451,7 +454,7 @@ class pam_simulation(monte_carlo):
     
     def terminate(self):
         return self.symbol_errors >= self.max_symbol_errors
-        
+#---pamsimulation2        
     
         
         
