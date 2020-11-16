@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from copy import deepcopy
+from scipy.special import erfc
 
 DEFAULT_PLOT_SETTINGS = {
     'plot_type' : '-', 
@@ -71,7 +72,6 @@ def plot_signal(t, x, plot_type = 'o', close_all = False,
 def random_bits(Nbits):
     return np.random.randint(0, high = 2, size = Nbits, dtype = int)
 
-
 # gray coding        
 def gray_code(m):
 
@@ -92,6 +92,9 @@ def str_to_bitsarray( bits_str ):
         bits[i] = int( bit )
     
     return bits
+
+def Qfunction(x):
+    return 0.5 * erfc( x / np.sqrt(2) )
 
 class signal:
     
@@ -179,6 +182,12 @@ class signal:
     def frequency_axis(self):
         return self.frequency_axis
       
+    def __add__(self, sig):
+        if not np.array_equal(self.t , sig.t):
+            raise ValueError('time axis must be the same in order for signals to be added')
+            
+        return signal(t = self.t, samples = self.samples + sig.samples)
+    
 class square_pulse(signal):
     
     def __init__(self, t, T1, tcenter = 0.0):
@@ -267,7 +276,13 @@ class constellation:
         else:
             return np.array(symbols), bitgroups
     
-                
+    def find_closest( self, sample ):
+        return np.abs( self.symbols - sample ).argmin()            
+    
+    def decode( self, sample ):
+        i = self.find_closest( sample )
+        return [self.symbols[i], self.bits[i], self.bits_str[i] ]
+    
 class pam_constellation(constellation):
     
     def __init__(self, M, beta = 1, title = None):
@@ -281,7 +296,8 @@ class pam_constellation(constellation):
             symbols [ i ] = 2 * i - M + 1
             
         self.set_symbols( symbols )
-        self.set_gray_bits( self.m )              
+        self.set_gray_bits( self.m )
+
     
 class digital_signal(signal):
     
@@ -324,6 +340,20 @@ class digital_signal(signal):
         self.set_input_bits( bits )
         samples = self.constellation.bits_to_symbols( bits )
         self.modulate_from_symbols( samples )
+
+class white_noise(signal):    
+
+    def __init__(self, N0 = None, B = None, sigma2 = None, t = None, Nsamples = None):
+        
+        if sigma2 is None:
+            sigma2 = N0 * B
+        
+        if t is not None:
+            Nsamples = t.size
+        
+        samples = np.sqrt(sigma2) * np.random.randn( Nsamples )
+        
+        super().__init__(t = t, samples = samples)        
         
 class system:
     
@@ -361,7 +391,69 @@ class system:
     
     def get_output(self):
         return self.output_signal
+
+class monte_carlo:
+    def __init__(self, max_iterations = 1000, generate = None, 
+                       apply = None, measure = None, report_step = 10,
+                       report = False):
+        
+        self.max_iterations = max_iterations
+        self.report_step = report_step
+        self.report = report
+        
+    def execute(self):
+        for i in range(self.max_iterations):
+            if self.report and ( np.mod(i, self.report_step) == 0 ):
+                print('iteration %d / %d' %(i, self.iterations) )
+            self.generate()
+            self.apply()
+            self.measure()
+       
+            if self.terminate():
+                self.termination_condition = True
+                self.iterations_performed = i
+                return
+            
+        self.termination_condition = False
+        self.iterations_performed = i
+                       
+class pam_simulation(monte_carlo):
     
+    def __init__(self, max_iterations = 1000, M = 16, SNRbdB = 10, report_step = 10, max_symbol_errors = 100):
+        
+        super().__init__(max_iterations = max_iterations, report_step = report_step )
+        self.M = M
+        self.m = np.log2(M).astype(int)
+        self.SNRbdB = SNRbdB
+        self.SNRb = 10 ** (SNRbdB / 10)
+        self.constellation = pam_constellation(M)
+        self.sigma = np.sqrt( (M ** 2.0 - 1) / ( 6 * self.SNRb *np.log2(M) ) ) 
+        self.symbol_errors = 0
+        self.bit_errors = 0
+        self.max_symbol_errors = max_symbol_errors
+        
+    def generate(self):
+        bits = random_bits( self.m )
+        symbol = self.constellation.bits_to_symbols( bits )
+        noise = self.sigma * np.random.randn( 1 )
+        
+        self.symbol = symbol
+        self.input_bits = bits
+        self.noise = noise
+            
+    def apply(self):
+        output = self.symbol + self.noise
+        [self.decoded_symbol, self.decoded_bits, _ ] = self.constellation.decode( output )
+                
+    def measure(self):
+        self.bit_errors += np.sum( np.abs(self.decoded_bits - self.input_bits) ).astype(int)
+        self.symbol_errors += int(self.symbol != self.decoded_symbol)
+    
+    def terminate(self):
+        return self.symbol_errors >= self.max_symbol_errors
+        
+    
+        
         
         
         
