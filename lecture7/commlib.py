@@ -188,6 +188,9 @@ class signal:
             
         return signal(t = self.t, samples = self.samples + sig.samples)
     
+    def get_spectrum(self):
+        return self.f, self.spec
+    
 class square_pulse(signal):
     
     def __init__(self, t, T1, tcenter = 0.0):
@@ -209,6 +212,9 @@ class constellation:
        self.symbols = []
        self.title = title
               
+    def avg_power(self):
+        return np.mean( np.abs(self.symbols) ** 2.0)
+    
     def plot(self, figure_no = None, plot_type = 'o'):
     
         if figure_no is None:
@@ -310,7 +316,8 @@ class pam_constellation(constellation):
 class digital_signal(signal):
     
     def __init__(self, TS = 1e-6, samples_per_symbol = 10, 
-                 tinitial = 0, tguard = 0.0, constellation = None):
+                 tinitial = 0, tguard = 0.0, constellation = None,
+                 fcarrier = 0):
     
         super().__init__()
         self.TS = TS
@@ -318,6 +325,7 @@ class digital_signal(signal):
         self.tinitial = tinitial
         self.tguard = tguard
         self.constellation =  constellation
+        self.fcarrier = fcarrier
         
     def set_constellation(self, constellation):
         self.constellation = constellation
@@ -338,7 +346,7 @@ class digital_signal(signal):
         i = np.floor( (self.t - self.tinitial) / self.TS).astype(int)
         j = np.where( np.logical_and(i >= 0, i < symbols.size ) )
 
-        self.samples[j] = symbols[ i[j] ]
+        self.samples[j] = symbols[ i[j] ] * np.cos(2 * np.pi * self.fcarrier * self.t[j] )
         
     def modulate_from_bits( self, bits, constellation = None):
         
