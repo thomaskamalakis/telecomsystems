@@ -339,7 +339,7 @@ class digital_signal(signal):
     
     def __init__(self, TS = 1e-6, samples_per_symbol = 10, 
                  tinitial = 0, tguard = 0.0, constellation = None,
-                 fcarrier = 0):
+                 fcarrier = 0, phi0 = 0):
     
         super().__init__()
         self.TS = TS
@@ -348,13 +348,15 @@ class digital_signal(signal):
         self.tguard = tguard
         self.constellation =  constellation
         self.fcarrier = fcarrier
+        self.phi0 = phi0
         
     def set_constellation(self, constellation):
         self.constellation = constellation
         
     def set_input_bits(self, bits):
         self.input_bits = bits        
-        
+       
+#---modulatefromsymbols1
     def modulate_from_symbols( self, symbols ):
         
         self.Tmin = self.tinitial - self.tguard
@@ -367,8 +369,12 @@ class digital_signal(signal):
         
         i = np.floor( (self.t - self.tinitial) / self.TS).astype(int)
         j = np.where( np.logical_and(i >= 0, i < symbols.size ) )
+        
+        phase = 2 * np.pi * self.fcarrier * self.t[j] + self.phi0
 
-        self.samples[j] = symbols[ i[j] ] * np.cos(2 * np.pi * self.fcarrier * self.t[j] )
+        self.samples[j] = np.real(symbols[ i[j] ]) * np.cos( phase ) \
+                        - np.imag(symbols[ i[j] ]) * np.sin( phase )
+#---modulatefromsymbols2
         
     def modulate_from_bits( self, bits, constellation = None):
         
@@ -434,11 +440,14 @@ class system:
 class monte_carlo:
     def __init__(self, max_iterations = 1000, generate = None, 
                        apply = None, measure = None, report_step = 10,
-                       report = False):
+                       report = False, keep_realizations = False):
         
         self.max_iterations = max_iterations
         self.report_step = report_step
         self.report = report
+        self.keep_realizations = keep_realizations
+        self.realizations = []
+        self.ci = 0
         
     def execute(self):
         for i in range(self.max_iterations):
@@ -448,13 +457,22 @@ class monte_carlo:
             self.apply()
             self.measure()
        
+            if self.keep_realizations:
+                self.append_to_realizations()
+                
             if self.terminate():
                 self.termination_condition = True
                 self.iterations_performed = i
                 return
             
+            self.ci += 1
+        
         self.termination_condition = False
         self.iterations_performed = i
+        
+    def plot_realizations(self):
+        plt.plot(np.real(self.realizations), np.imag(self.realizations), 'o')
+        
 #---montecarlo2
 
 #---pamsimulation1                       
@@ -493,8 +511,56 @@ class pam_simulation(monte_carlo):
     def terminate(self):
         return self.symbol_errors >= self.max_symbol_errors
 #---pamsimulation2        
+
+#---psksimulation1
+class psk_simulation(monte_carlo):
     
-            
+    def __init__(self, max_iterations = 1000, M = 16, SNRbdB = 10, report_step = 10, 
+                       keep_realizations = True, max_symbol_errors = 100):
+
+        super().__init__(max_iterations = max_iterations, report_step = report_step, 
+                         keep_realizations = keep_realizations )
+        self.M = M
+        self.m = np.log2(M).astype(int)
+        self.SNRbdB = SNRbdB
+        self.SNRb = 10 ** (SNRbdB / 10)
+        self.constellation = psk_constellation(M)
+        self.N0 = 1 / self.SNRb / np.log2(M)
+        self.sigma = np.sqrt(self.N0 / 2)
+        self.symbol_errors = 0
+        self.bit_errors = 0
+        self.max_symbol_errors = max_symbol_errors    
+        self.realizations = np.zeros( max_iterations, dtype = complex )        
+
+    def generate(self):
+        bits = random_bits( self.m )
+        self.symbol = self.constellation.bits_to_symbols( bits )
+        self.noise = self.sigma * np.random.randn( 1 ) + 1j * self.sigma * np.random.randn(1)
+        self.input_bits = bits
+        
+    def apply(self):
+        self.output = self.symbol + self.noise
+        [self.decoded_symbol, self.decoded_bits, _ ] = self.constellation.decode( self.output )
+        
+    def measure(self):
+        self.bit_errors += np.sum( np.abs(self.decoded_bits - self.input_bits) ).astype(int)
+        self.symbol_errors += int(self.symbol != self.decoded_symbol)
+
+    def terminate(self):
+        return self.symbol_errors >= self.max_symbol_errors
+    
+    def append_to_realizations(self):
+        self.realizations[self.ci] = self.output[0]
+    
+    def plot_constellation(self):
+        plt.figure()
+        self.plot_realizations()
+        plt.xlabel('x1')
+        plt.ylabel('x2')
+        plt.title('M= %d, SNRb = %2.1f dB' %(self.M, self.SNRbdB))
+        plt.axis('equal')
+#---psksimulation2
+
         
         
         
