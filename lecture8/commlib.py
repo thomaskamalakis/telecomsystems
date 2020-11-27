@@ -319,13 +319,17 @@ class pam_constellation(constellation):
 #---pskconstellation1                           
 class psk_constellation(constellation):
 
-    def __init__(self, M, R = 1,title = None, SNRbdB = None):
+    def __init__(self, M, R = 1,title = None, SNRbdB = 10):
         super().__init__(title = title)
         
         self.M = M
         self.m = np.log2(M).astype(int)
         self.SNRbdB = SNRbdB
         self.R = R
+        self.SNRb = 10 ** (SNRbdB/10)
+        self.SNRS = self.SNRb * self.m
+        self.vmax = 100
+        self.Nphi = 1000
         
         symbols = np.zeros( M, dtype = complex )
         for i in range( M ):
@@ -333,6 +337,30 @@ class psk_constellation(constellation):
             
         self.set_symbols( symbols )
         self.set_gray_bits( self.m )
+        
+    def fphi(self, phis):
+        rS = self.SNRS
+        v = np.arange(0, self.vmax, self.vmax / self.Nphi)
+        f = np.zeros(phis.size)
+        
+        for i, phi in enumerate(phis):
+            g = v * np.exp( -0.5 * ( v - np.sqrt(2*rS) * np.cos(phi) ) ** 2.0 )
+            self.v = v
+            self.g = g
+            f[i] = 1/(2*np.pi) * np.exp( -rS*np.sin(phi) ** 2.0) * np.trapz(g,v)
+      
+        return f
+    
+    def ser(self, Npoints = 100):
+        
+        phi = np.arange(-np.pi / self.M, np.pi / self.M, 2 * np.pi / self.M / Npoints)
+        fphi = self.fphi(phi)
+        return 1 - np.trapz(fphi, phi)
+    
+    def ber(self, Npoints = 1000):
+        return self.ser(Npoints = Npoints) / self.m
+    
+        
 #---pskconstellation2
         
 class digital_signal(signal):
@@ -524,7 +552,7 @@ class psk_simulation(monte_carlo):
         self.m = np.log2(M).astype(int)
         self.SNRbdB = SNRbdB
         self.SNRb = 10 ** (SNRbdB / 10)
-        self.constellation = psk_constellation(M)
+        self.constellation = psk_constellation(M, SNRbdB = SNRbdB)
         self.N0 = 1 / self.SNRb / np.log2(M)
         self.sigma = np.sqrt(self.N0 / 2)
         self.symbol_errors = 0
@@ -561,8 +589,7 @@ class psk_simulation(monte_carlo):
         plt.axis('equal')
 #---psksimulation2
 
-        
-        
+
         
         
         
