@@ -316,6 +316,46 @@ class pam_constellation(constellation):
     def ber(self):
         return self.ser() / self.m
 
+#---qamconstellation1
+class qam_constellation(constellation):
+
+    def set_gray_bits( self, m ):
+        ms = int(m / 2)
+        g = gray_code( ms )
+        self.bits = []
+        self.bits_str = []
+        self.map = {}
+        self.m = m
+        i = 0
+        
+        for p, cwp in enumerate(g):
+            for q, cwq in enumerate(g):
+                cw = cwp + cwq                
+                self.bits_str.append(cw)
+                self.bits.append( str_to_bitsarray( cw ) )
+                self.map[ cw ] = self.symbols[ i ]
+                i += 1
+                
+    def __init__(self, M, beta = 1, title = None, SNRbdB = None):
+        super().__init__(title = title)
+        
+        self.M = M
+        self.m = np.log2(M).astype(int)
+        self.SNRbdB = SNRbdB
+        Ms = np.sqrt(M).astype(int)
+        self.Ms = Ms
+        i = 0
+        symbols = np.zeros( M, dtype = complex )
+        for p in range( Ms ):
+            for q in range( Ms ):
+                symbols [ i ] = beta * ( 2*p - Ms + 1 ) + 1j * beta * ( 2*q - Ms + 1 )
+                i += 1
+                
+        self.set_symbols( symbols )
+        
+        self.set_gray_bits( self.m )
+#---qamconstellation2
+    
 #---pskconstellation1                           
 class psk_constellation(constellation):
 
@@ -400,6 +440,8 @@ class digital_signal(signal):
 
         self.samples[j] = np.real(symbols[ i[j] ]) * np.cos( phase ) \
                         - np.imag(symbols[ i[j] ]) * np.sin( phase )
+        self.phase = phase
+        
 #---modulatefromsymbols2
         
     def modulate_from_bits( self, bits, constellation = None):
