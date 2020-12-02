@@ -645,7 +645,61 @@ class psk_simulation(monte_carlo):
         plt.axis('equal')
 #---psksimulation2
 
+def multiply_modulo2(v, G):
+    return v.dot(G) % 2
 
+class block_code:
+    
+    def __init__(self, k, n, G = None):
+        self.k = k
+        self.n = n
+        self.mw_strs = []
+        self.mw = np.zeros([2 ** k, k])
+        
+        self.set_messages()
+        self.G = G
+        if G is not None:
+            self.set_generator_matrix(G)   
+            self.set_codewords()
+
+    def set_generator_matrix(self, G):
+        self.G = G
+    
+    def set_messages(self):
+        
+        for i in range(0, 2 ** self.k):
+            bstr = np.binary_repr(i, width = self.k)
+            self.mw_strs.append(bstr)
+            self.mw[i, :] = str_to_array(bstr)
+            
+    def set_codewords(self):
+        self.cw = np.zeros([2 ** self.k, self.n])
+        
+        for i in range(0, 2 ** self.k) :
+            cw = multiply_modulo2(self.mw[i , :] , self.G)
+            self.cw[i, :] = cw
+            
+class systematic_code( block_code ):
+    
+    def __init__(self, k = None, n = None, P = None):
+    
+        if P is not None:
+            k, ny = P.shape
+            n = k + ny
+            I = np.identity(k, dtype = int)
+            
+            G = np.concatenate( (I,P), axis = 1)
+            super().__init__(k, n, G = G)        
+            self.set_messages()
+            self.set_codewords()
+        else:
+            super().__init__(k, n)
+        
+    
+            
+            
+        
+            
         
         
 
