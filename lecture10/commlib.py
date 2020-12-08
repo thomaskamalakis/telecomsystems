@@ -645,21 +645,21 @@ class psk_simulation(monte_carlo):
         plt.axis('equal')
 #---psksimulation2
 
+#---multiplymodulo2
 def multiply_modulo2(v, G):
     return v.dot(G) % 2
 
 class block_code:
     
-    def __init__(self, k, n, G = None):
-        self.k = k
-        self.n = n
+    def __init__(self, k, n, G = None, compute_codewords = False):
+        self.k = int(k)
+        self.n = int(n)
         self.mw_strs = []
         self.mw = np.zeros([2 ** k, k])
         
-        self.set_messages()
         self.G = G
-        if G is not None:
-            self.set_generator_matrix(G)   
+        if compute_codewords:
+            self.set_messages()
             self.set_codewords()
 
     def set_generator_matrix(self, G):
@@ -671,7 +671,8 @@ class block_code:
             bstr = np.binary_repr(i, width = self.k)
             self.mw_strs.append(bstr)
             self.mw[i, :] = str_to_array(bstr)
-            
+
+#---blockcodemiddle           
     def set_codewords(self):
         self.cw = np.zeros([2 ** self.k, self.n])
         
@@ -679,21 +680,97 @@ class block_code:
             cw = multiply_modulo2(self.mw[i , :] , self.G)
             self.cw[i, :] = cw
             
+    def calc_weights(self):
+        self.weights = np.zeros( 2**self.k )
+        self.min_dist = np.inf
+        
+        for i, cw in enumerate(self.cw):
+            self.weights[i] = np.sum(cw)
+            if self.weights[i] < self.min_dist and self.weights[i] > 0:
+                self.min_dist = self.weights[i]
+            
+    def min_weight( self ):
+        i = np.where( self.weights > 0 )
+        return np.min( self.weights[i] )    
+    
+    def calc_distances(self):
+        self.distances = np.zeros([2**self.k, 2**self.k])
+        self.min_dist = np.inf 
+        
+        for p in range(0, 2**self.k):
+            for q in range(0, 2**self.k):
+                
+                if ( p != q ):
+                    d = np.sum(np.logical_xor(self.cw[p], self.cw[q]))
+                    if d < self.min_dist:
+                        self.min_dist = d
+                    
+                    self.distances[p,q] = d 
+    
+    def min_distance( self ):
+        return self.min_dist
+
+    def print(self):
+        for i, mw in enumerate(self.mw):
+            cw = self.cw[i]
+            print(mw, '-->', cw)
+            
+    def build_standard_array(self):
+        
+        combinations = []
+        for i in range(0, 2 ** self.n):
+            bstr = np.binary_repr(i, width = self.n)
+            combinations.append({
+                'sequence' : bstr,
+                'weight' : bstr.count('1')
+            })
+            self.combinations = sorted(combinations, key = lambda x: x['weight'])
+            
+#---blockcodeend1           
+            
+#---systematiccode1
 class systematic_code( block_code ):
     
-    def __init__(self, k = None, n = None, P = None):
+    def __init__(self, P = None, compute_codewords = False):
     
-        if P is not None:
-            k, ny = P.shape
-            n = k + ny
-            I = np.identity(k, dtype = int)
+        k, ny = P.shape
+        n = k + ny
+        I = np.identity(k, dtype = int)
+        G = np.concatenate( (I,P), axis = 1)            
+        self.P = P
+        super().__init__(k, n, G = G, compute_codewords = compute_codewords)
+        self.set_parity_matrix()
+        
             
-            G = np.concatenate( (I,P), axis = 1)
-            super().__init__(k, n, G = G)        
-            self.set_messages()
-            self.set_codewords()
-        else:
-            super().__init__(k, n)
+    def set_parity_matrix(self):
+        I = np.identity(self.n - self.k, dtype = int)
+        self.H = np.concatenate( (np.matrix.transpose(self.P), I), axis = 1 )
+        self.Ht = np.matrix.transpose(self.H)
+#---systematiccode2
+   
+#---hammingcode1     
+class hamming_code( systematic_code ):
+    
+    def __init__(self, m = 3, compute_codewords = False):
+        k = int(2 ** m - m - 1)
+        n = k + m
+        Pt = np.zeros( [n-k, k] )
+        c = 0
+        
+        for i in range(1, 2 ** m):
+            bstr = np.binary_repr(i, m)
+            b = str_to_array(bstr)
+            if sum(b) >= 2:
+                Pt[:, c] = b
+                c += 1
+            
+        P = np.transpose(Pt)
+        super().__init__( P = P, compute_codewords = compute_codewords )
+#---hammingcode2     
+            
+        
+    
+    
         
     
             
