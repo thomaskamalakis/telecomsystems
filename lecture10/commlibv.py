@@ -649,15 +649,94 @@ class psk_simulation(monte_carlo):
 def multiply_modulo2(v, G):
     return (v.dot(G) % 2).astype(int)
 
-def add_str_modulo2(s1, s2):
-    a1 = str_to_array(s1)
-    a2 = str_to_array(s2)
-    return array_to_str( np.bitwise_xor(a1, a2) )
+class codeword:
+    
+    def __init__(self, value = None, G = None, message = None):
+        
+        
+        if value is not None:
+            value = np.array(value, dtype = int)        
+            self.value = value
+        else:
+            message = np.array(message, dtype = int)
+            self.value = multiply_modulo2(message, G)
+        
+        self.value = self.value.astype(int)
+        
+    def weight(self):
+        return np.sum(self.value)
+    
+    def str_representation(self):
+        return array_to_str(self.value)
+    
+    def __add__(self, c):
+        value = ( (self.value + c.value) % 2).astype(int) 
+        return codeword(value = value)
+    
+    def __str__(self):
+        return self.str_representation()
 
-def multiply_str_modulo2(v, G):
-    v = str_to_array(v)
-    return array_to_str( multiply_modulo2( v, G ) )
+class codeword_list:
+
+    def __init__(self):
+        self.elements = []
+        
+    def __getitem__(self, i):
+        return self.elements[i]
+    
+    def __setitem__(self, i, c):
+        self.elements[i] = c
+        
+    def append(self, c):
+        self.elements.append(c)
+    
+    def size(self):
+        return len(self.elements)
+    
+    
+        
+        
+def convert_to_pool(cw_strs):
+    
+    pool = []
+    for cw_str in cw_strs:
+        s = cw_str['sequence']
+        b = str_to_array(s)
+        pool.append({'sequencestr' : s,
+                     'weight' : s.count('1') })
+    
+    return pool
+
+class standard_array:
+    
+    def __init__(self, k, n, cw_str, H):
+        self.k = k
+        self.n = n
+        self.cw_str = convert_to_pool(cw_str)
+        self.H = H
+        self.elements = []
+        self.no_rows = 0
+        self.no_columns = 0
+        self.no = 0
+        
+    def add_first_row(self):
+        self.add_row(self.cw)
+    
+    def build_pool(self):
+        self.pool = []
+        print('Arranging combinations')
+        
+        for i in range(0, 2 ** self.n):
+            bstr = np.binary_repr(i, width = self.n)
+            pool_element = { 'sequencestr' : bstr,
+                             'weight' : bstr.count('1') }
             
+            if pool_element not in self.cw_str:
+                self.pool.append(pool_element)
+        
+        self.pool.sort(key = lambda x: x['weight'])
+        
+        
 class block_code:
     
     def __init__(self, k, n, G = None, compute_codewords = False):
@@ -688,7 +767,15 @@ class block_code:
         
         for i in range(0, 2 ** self.k) :
             cw = multiply_modulo2(self.mw[i , :] , self.G)
+            print(cw)
             self.cw[i, :] = cw.astype(int)
+            cw_str = array_to_str(cw)
+            mw_str = array_to_str(self.mw[i, :])
+            self.cw_str.append({
+                'sequence' : cw_str,
+                'weight' : cw_str.count('1'),
+                'message' : mw_str
+            })
         
     def calc_weights(self):
         self.weights = np.zeros( 2**self.k )
@@ -724,58 +811,26 @@ class block_code:
         for i, mw in enumerate(self.mw):
             cw = self.cw[i]
             print(mw, '-->', cw)
-
-#---buildstandardarray1            
+            
     def build_standard_array(self):
         
         combinations = []
-        print('Building combinations')
+        print('Arranging combinations')
         
         for i in range(0, 2 ** self.n):
             bstr = np.binary_repr(i, width = self.n)
-            combinations.append(bstr)
-
-        print('Building codeword lists')        
-        cw_strs = []
-        for cw in self.cw:
-            bstr = array_to_str(cw)
-            cw_strs.append(bstr)
-            
-        print('Removing codewords from combination pool')        
-        combinations = [x for x in combinations if x not in cw_strs]
-        combinations = sorted(combinations, key = lambda x: x.count('1'))
-                
-        print('Setting first standard array row')
-        standard_array = deepcopy(cw_strs)
+            combinations.append({
+                'sequence' : bstr,
+                'weight' : bstr.count('1')
+            })
+            self.combinations = sorted(combinations, key = lambda x: x['weight'])
+        print('Building codewords')
+        self.set_codewords()
         
-        i = 2
-        while len(combinations) > 0:
-            print('Adding row %i , there are now %d elements in the array' %(i, len(standard_array)))
-            driver = combinations[0] 
-            print('driver now is %s' %driver)
-            new_elements = [ add_str_modulo2(driver,x) for x in cw_strs]
-            print('New row to be added :%s' % new_elements)
-            standard_array.extend( new_elements )            
-            combinations = [x for x in combinations if x not in new_elements]
-            i += 1
-            print('\n')
-
-#---buildstandardarray2            
-        print('Rearranging array')
         self.standard_array = []
-        self.drivers = []
-        self.syndromes = {}
         
-        for i in range(0, len(standard_array), len(cw_strs) ):
-            self.standard_array.append( standard_array[i:i+len(cw_strs)] )
-            driver = standard_array[i]
-            self.drivers.append( driver )
-            syndrome = multiply_str_modulo2( driver, self.Ht )
-            self.syndromes[syndrome] = driver
+        
             
-    def print_standard_array(self):
-        for row in self.standard_array:
-            print(row)            
 #---blockcodeend1           
             
 #---systematiccode1
@@ -816,7 +871,6 @@ class hamming_code( systematic_code ):
         P = np.transpose(Pt)
         super().__init__( P = P, compute_codewords = compute_codewords )
 #---hammingcode2     
-
             
         
     

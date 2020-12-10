@@ -5,7 +5,7 @@ P = np.array([[1, 0],
               [0, 1],
               [0, 0]])
 
-a = cl.systematic_code( P = P )
+a = cl.systematic_code( P = P, compute_codewords = True )
 print('Code words:')
 a.print()
 a.calc_distances()
