@@ -42,3 +42,16 @@ def system_action(t, x, Hcallable):
     Y = X * Hf
     return inv_spectrum(f, Y)
     
+
+
+
+
+
+
+
+
+
+
+
+
+

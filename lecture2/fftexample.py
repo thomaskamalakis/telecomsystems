@@ -20,7 +20,7 @@ Df = 1.0 / (N * Dt)
 f = n * Df
 
 # signal in the time domain
-x=square(t,T)
+x = square(t,T)
 
 # signal in the frequency domain
 X = Dt * np.fft.fftshift( np.fft.fft( np.fft.fftshift(x) ) )

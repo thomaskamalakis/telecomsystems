@@ -3,12 +3,16 @@ import matplotlib.pyplot as plt
 
 T = 10
 T1 = 1
-N = 1000
+N = 10000
 
 t = cl.time_axis(-T, T, N)
 x = cl.square(t, T1)
 f = cl.frequency_axis(t)
 X = cl.spectrum(t, x)
+
+
+
+
 
 plt.close('all')
 cl.plot_signal(t, x, xlabel = 't',

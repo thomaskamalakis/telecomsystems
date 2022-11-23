@@ -5,7 +5,7 @@ f0 = 50
 T = 1 / f0
 Tmin = -T / 2
 Tmax = +T / 2
-N = 10000
+N = 1
 A = 1
 
 t = cl.time_axis(Tmin, Tmax, N)
