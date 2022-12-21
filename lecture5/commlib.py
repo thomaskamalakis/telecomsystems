@@ -159,10 +159,11 @@ def plot_constellation(c, figure_no = None, title = None):
 # gray coding        
 def gray_code(m):
 
-    if m==1:
+    print('m = ', m)        
+    if m == 1:
         g = ['0','1']
 
-    elif m>1:
+    elif m > 1:
         gs = gray_code(m-1)
         gsr = gs[::-1]
         gs0 = ['0' + x for x in gs]

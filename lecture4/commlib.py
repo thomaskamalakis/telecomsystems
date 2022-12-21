@@ -89,8 +89,10 @@ def power_density(t, x):
     return 1.0 / T * np.abs( spectrum(t,x) ) ** 2.0
 
 def default_pulse(t, TS):
-    return square(t - TS/2.0, TS)
-    
+    i = np.where( (t >= 0) & (t<TS) )
+    x = np.zeros(t.size)
+    x[i] = 1
+    return x   
 # pulse amplitude modulation waveform : slow version    
 def pam_waveform1(ak, TS, p_callable = default_pulse, 
                  samples = 10, tinitial = 0, tguard = 0.0):
@@ -100,11 +102,13 @@ def pam_waveform1(ak, TS, p_callable = default_pulse,
     Ntot = 2 * Nguard + samples * ak.size            # total number of points   
     
     x = np.zeros( Ntot.astype(int) )
-    t = np.arange( tinitial, tinitial + Ntot * Dt, Dt )
+    t = np.arange( tinitial-tguard, tinitial-tguard + Ntot * Dt, Dt )
         
-    for k, a in enumerate(ak):        
+    for k, a in enumerate(ak):
+        print(k, a)        
         x += a * p_callable( t - k * TS, TS )
-        
+        plt.figure(1)
+        plt.plot(t, a * p_callable( t - k * TS, TS ),'-o' )
     return t, x
 
 # pulse amplitude modulation : fast version

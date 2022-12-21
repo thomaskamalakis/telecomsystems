@@ -104,9 +104,12 @@ class signal:
         if samples is not None:
            self.samples = samples
         elif signal_callable is not None:
-           self.signal = signal_callable(t)
+           self.samples = signal_callable(t)
           
         self.set_default_plot_properties()
+        
+    def __repr__(self):
+        return 'Signal object with %d points' %self.N
         
     def set_time_axis(self, Tmin, Tmax, N):
         self.t = np.linspace(Tmin, Tmax, N, endpoint = False)
@@ -276,9 +279,8 @@ class pam_constellation(constellation):
         self.M = M
         self.m = np.log2(M).astype(int)
         
-        symbols = np.zeros( M )
-        for i in range( M ):
-            symbols [ i ] = 2 * i - M + 1
+        i = np.arange(1, M + 1)
+        symbols = 2 * i - M - 1
             
         self.set_symbols( symbols )
         self.set_gray_bits( self.m )              
