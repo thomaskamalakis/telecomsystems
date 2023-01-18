@@ -4,24 +4,16 @@ import numpy as np
 
 # Parameters
 TS = 1e-9
-samples_per_symbol = 40
+samples_per_symbol = 100
 tguard = 1 * TS
-f0 = 1 / TS
 N0 = 1e-10
 B = 2e9
-f0 = 2e9
+f0 = 6e9
 tinitial = 3/ f0 /4
 
-# system transfer function
-H = lambda f : np.exp( -f**2.0 / f0 ** 2.0 / 2)
 
 # Signal constellation
 c = cl.pam_constellation(16, title = '16-PAM')
-
-# Plot PAM constellation
-plt.close('all')
-c.plot()
-c.plot_map()
 
 # set bits to be transmitted
 bits = cl.random_bits(32)

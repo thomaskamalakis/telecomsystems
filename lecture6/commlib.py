@@ -414,6 +414,7 @@ class monte_carlo:
         for i in range(self.max_iterations):
             if self.report and ( np.mod(i, self.report_step) == 0 ):
                 print('iteration %d / %d' %(i, self.iterations) )
+            
             self.generate()
             self.apply()
             self.measure()
@@ -425,6 +426,19 @@ class monte_carlo:
             
         self.termination_condition = False
         self.iterations_performed = i
+        
+    def generate(self):
+        pass
+    
+    def apply(self):
+        pass
+    
+    def measure(self):
+        pass
+    
+    def terminate(self):
+        pass
+    
 #---montecarlo2
 
 #---pamsimulation1                       
